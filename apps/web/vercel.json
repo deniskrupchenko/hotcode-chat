@@ -1,0 +1,6 @@
+{
+  "buildCommand": "pnpm --filter @online-chat/shared run build && pnpm --filter @online-chat/web run build",
+  "installCommand": "pnpm install",
+  "framework": "nextjs"
+}
+

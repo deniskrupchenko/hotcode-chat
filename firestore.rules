@@ -1,0 +1,104 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function chatDoc(chatId) {
+      return get(/databases/$(database)/documents/chats/$(chatId));
+    }
+
+    function isChatParticipant(chatId) {
+      return isSignedIn() &&
+        chatDoc(chatId).data != null &&
+        chatDoc(chatId).data.participants.hasAny([request.auth.uid]);
+    }
+
+    function isReadByUpdate() {
+      return resource.data.diff(request.resource.data).changedKeys().hasOnly(["readBy"]);
+    }
+
+    function isReactionUpdate() {
+      return resource.data.diff(request.resource.data).changedKeys().hasOnly(["reactions"]);
+    }
+
+    function isSoftDeleteUpdate() {
+      return request.resource.data.deletedAt != null &&
+        resource.data.diff(request.resource.data).changedKeys().hasOnly(["deletedAt"]);
+    }
+
+    function isMessageEditAllowed() {
+      return request.auth.uid == resource.data.senderId &&
+        request.time < resource.data.createdAt + duration.value(10, 'm') &&
+        resource.data.diff(request.resource.data).changedKeys().hasOnly(["text", "attachments", "editedAt"]);
+    }
+
+    function userAllowedWriteFields() {
+      return request.resource.data.keys().hasOnly([
+        "uid",
+        "displayName",
+        "photoURL",
+        "email",
+        "createdAt",
+        "updatedAt",
+        "lastLoginAt",
+        "lastSeen",
+        "isOnline",
+        "fcmTokens"
+      ]);
+    }
+
+    match /users/{uid} {
+      allow read: if true;
+
+      allow create: if isSignedIn() &&
+        request.auth.uid == uid &&
+        userAllowedWriteFields() &&
+        request.resource.data.uid == uid;
+
+      allow update: if isSignedIn() &&
+        request.auth.uid == uid &&
+        userAllowedWriteFields() &&
+        request.resource.data.uid == uid;
+    }
+
+    match /chats/{chatId} {
+      allow read, get, list: if isChatParticipant(chatId);
+
+      allow create: if isSignedIn() &&
+        request.resource.data.participants.hasAny([request.auth.uid]) &&
+        request.resource.data.participants.size() >= 1;
+
+      allow update: if isChatParticipant(chatId) &&
+        request.resource.data.participants.hasAny([request.auth.uid]) &&
+        request.resource.data.participants.size() >= 1;
+
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow get, list: if isChatParticipant(chatId);
+
+        allow create: if isChatParticipant(chatId) &&
+          request.auth.uid == request.resource.data.senderId;
+
+        allow update: if isChatParticipant(chatId) &&
+          (isMessageEditAllowed() || isSoftDeleteUpdate() || isReadByUpdate() || isReactionUpdate());
+
+        allow delete: if false;
+      }
+
+      match /typing/{uid} {
+        allow read: if isChatParticipant(chatId);
+        allow write: if isChatParticipant(chatId) && request.auth.uid == uid;
+      }
+
+      match /reports/{reportId} {
+        allow create: if isChatParticipant(chatId);
+        allow read, update, delete: if false;
+      }
+    }
+  }
+}
+
+

@@ -1,0 +1,49 @@
+{
+  "name": "online-chat-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Production-ready monorepo for an online chat application with Next.js and Firebase.",
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "pnpm -r --filter apps/web dev",
+    "build": "pnpm run lint && pnpm -r build",
+    "lint": "eslint . --max-warnings=0",
+    "test": "pnpm -r test --parallel",
+    "firebase:login": "firebase login",
+    "firebase:emulators": "firebase emulators:start",
+    "firebase:deploy": "firebase deploy --only hosting,firestore:rules,storage:rules,functions",
+    "prepare": "husky install"
+  },
+  "workspaces": [
+    "apps/*",
+    "functions",
+    "shared"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.3",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "firebase-tools": "^13.0.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.5"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,scss,html,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}
+

@@ -1,0 +1,16 @@
+{
+  "projects": {
+    "default": "hotcode-ai-project"
+  },
+  "targets": {
+    "hotcode-ai-project": {
+      "hosting": {
+        "web": [
+          "hotcode-ai-project"
+        ]
+      }
+    }
+  }
+}
+
+

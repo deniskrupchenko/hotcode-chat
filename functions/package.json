@@ -1,0 +1,32 @@
+{
+  "name": "@online-chat/functions",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Firebase Cloud Functions for the NovaChat application.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "rimraf lib && tsc --project tsconfig.json",
+    "clean": "rimraf lib",
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@online-chat/shared": "workspace:*",
+    "@google-cloud/logging": "^10.4.0",
+    "firebase-admin": "^11.11.0",
+    "firebase-functions": "^5.0.1",
+    "zod": "^3.23.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "dotenv": "^16.4.5",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}
+
+

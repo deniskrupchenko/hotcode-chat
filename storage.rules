@@ -1,0 +1,42 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function chatDocument(chatId) {
+      return get(/databases/$(default)/documents/chats/$(chatId));
+    }
+
+    function isChatParticipant(chatId) {
+      return isSignedIn() &&
+        chatDocument(chatId).data != null &&
+        chatDocument(chatId).data.participants.hasAny([request.auth.uid]);
+    }
+
+    function isAllowedSize() {
+      return (
+        request.resource.contentType.matches('image/.*') && request.resource.size < 10 * 1024 * 1024
+      ) || (
+        request.resource.contentType.matches('video/.*') && request.resource.size < 100 * 1024 * 1024
+      ) || (
+        request.resource.contentType.matches('application/pdf') && request.resource.size < 20 * 1024 * 1024
+      ) || (
+        request.resource.contentType.matches('text/.*') && request.resource.size < 20 * 1024 * 1024
+      ) || (
+        request.resource.contentType.matches('application/vnd.*') && request.resource.size < 20 * 1024 * 1024
+      );
+    }
+
+    match /chatMedia/{chatId}/{uid}/{fileId} {
+      allow read: if isChatParticipant(chatId);
+      allow write: if isChatParticipant(chatId) &&
+        request.auth.uid == uid &&
+        isAllowedSize();
+      allow delete: if isChatParticipant(chatId);
+    }
+  }
+}
+
+
